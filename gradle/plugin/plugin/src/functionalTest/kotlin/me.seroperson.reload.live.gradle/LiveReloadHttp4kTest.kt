@@ -1,6 +1,5 @@
 package me.seroperson.reload.live.gradle
 
-import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.io.TempDir
@@ -27,19 +26,7 @@ class LiveReloadHttp4kTest : LiveReloadTestBase() {
         buildFile.writeText(BUILD_CONTENT)
         appCode.writeText(APP_CODE_1)
 
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withDebug(true)
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        runner.withArguments(
-            ":liveReloadRun",
-            "--info",
-            "--watch-fs",
-            "--stacktrace",
-            "-Dorg.gradle.vfs.verbose=true",
-        )
-
+        val runner = initGradleRunner(":liveReloadRun", projectDir)
         val isBuildRunning = AtomicBoolean(true)
         val runThread =
             Thread {
@@ -82,7 +69,7 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("org.http4k:http4k-bom:6.18.1.0"))
+    implementation(platform("org.http4k:http4k-bom:5.47.0.0"))
     implementation("org.http4k:http4k-core")
 }
 

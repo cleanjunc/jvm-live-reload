@@ -1,6 +1,5 @@
 package me.seroperson.reload.live.gradle
 
-import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.io.TempDir
@@ -36,13 +35,7 @@ class LiveReloadMultiprojectTest : LiveReloadTestBase() {
         buildAFile.writeText(BUILD_A_CONTENT)
         buildBFile.writeText(BUILD_B_CONTENT)
 
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withDebug(true)
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        runner.withArguments(":project-a:liveReloadRun", "--info", "--watch-fs", "--stacktrace")
-
+        val runner = initGradleRunner(":project-a:liveReloadRun", projectDir)
         val isBuildRunning = AtomicBoolean(true)
         val runThread =
             Thread {

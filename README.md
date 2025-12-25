@@ -66,6 +66,8 @@ application's code and also setup a plugin for your build system. Currently
 supported build systems are `sbt`, `gradle` and `mill`. We want to cover as much
 as we can, so more build systems will likely be added later.
 
+Minimum required JDK is **17**.
+
 <!-- prettier-ignore-start -->
 > [!IMPORTANT]
 > After making all the necessary changes, be sure to read the 
@@ -370,7 +372,7 @@ whether their own setup will work.
   </tr>
   <tr>
     <td><a href="https://github.com/http4k/http4k">http4k</a></td>
-    <td><i>http4k</i> <b>6.18.1.0</b></td>
+    <td><i>http4k</i> <b>5.47.0.0</b>, <b>6.18.1.0</b></td>
     <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/plugin/plugin/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadHttp4kTest.kt">LiveReloadHttp4kTest.kt</a></td>
     <td>Everything from <a href="#changes-to-the-application-code">this section</a>.</td>
   </tr>

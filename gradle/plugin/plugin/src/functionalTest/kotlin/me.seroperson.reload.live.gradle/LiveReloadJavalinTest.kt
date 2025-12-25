@@ -1,6 +1,5 @@
 package me.seroperson.reload.live.gradle
 
-import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.io.TempDir
@@ -27,13 +26,7 @@ class LiveReloadJavalinTest : LiveReloadTestBase() {
         buildFile.writeText(BUILD_CONTENT)
         appCode.writeText(APP_CODE_1)
 
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withDebug(true)
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        runner.withArguments(":liveReloadRun", "--info", "--watch-fs", "--stacktrace")
-
+        val runner = initGradleRunner(":liveReloadRun", projectDir)
         val isBuildRunning = AtomicBoolean(true)
         val runThread =
             Thread {

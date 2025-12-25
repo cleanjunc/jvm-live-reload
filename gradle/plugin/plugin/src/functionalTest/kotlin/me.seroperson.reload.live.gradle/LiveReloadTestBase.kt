@@ -2,10 +2,33 @@ package me.seroperson.reload.live.gradle
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.gradle.testkit.runner.GradleRunner
+import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class LiveReloadTestBase {
     private val client = OkHttpClient()
+
+    fun initGradleRunner(
+        command: String,
+        projectDir: File,
+    ): GradleRunner {
+        val runner = GradleRunner.create()
+        runner.forwardOutput()
+        runner.withGradleVersion("8.14.3")
+        runner.withPluginClasspath()
+        runner.withProjectDir(projectDir)
+        runner.withEnvironment(mapOf("GRADLE_OPTS" to "--add-opens=java.base/java.nio=ALL-UNNAMED"))
+        runner.withArguments(
+            command,
+            "--info",
+            "--watch-fs",
+            "--stacktrace",
+            "-Dorg.gradle.vfs.verbose=true",
+            "-Dorg.gradle.native=true",
+        )
+        return runner
+    }
 
     fun runUntil(
         isBuildRunning: AtomicBoolean,
