@@ -72,7 +72,7 @@ LocalRootProject / publish / skip := true
 LocalRootProject / publishLocal / skip := true
 LocalRootProject / publishM2 / skip := true
 
-lazy val `sbt-live-reload` = (projectMatrix in file("sbt"))
+lazy val `sbtLiveReload` = (projectMatrix in file("sbt"))
   .enablePlugins(SbtPlugin, BuildInfoPlugin)
   .settings(
     name := "sbt-live-reload",
@@ -90,7 +90,7 @@ lazy val `sbt-live-reload` = (projectMatrix in file("sbt"))
     scriptedLaunchOpts += version.apply { v => s"-Dproject.version=$v" }.value
   )
   .jvmPlatform(scalaVersions = supportedScalaSbtVersions)
-  .dependsOn(`build-link`, `runner`)
+  .dependsOn(`buildLink`, `runner`)
 
 lazy val `webserver` = (project in file("core/webserver"))
   .settings(javaProjectSettings)
@@ -99,7 +99,7 @@ lazy val `webserver` = (project in file("core/webserver"))
     description := "Development-mode proxy webserver for Live Reload experience on JVM",
     libraryDependencies := Seq(Dependencies.undertow)
   )
-  .dependsOn(`build-link`)
+  .dependsOn(`buildLink`)
 
 lazy val `runner` = (project in file("core/runner"))
   .settings(javaProjectSettings)
@@ -108,16 +108,16 @@ lazy val `runner` = (project in file("core/runner"))
     description := "Contains an universal Live Reload webserver initialization and reloading logic",
     libraryDependencies := Seq(Dependencies.playFileWatch, Dependencies.jline)
   )
-  .dependsOn(`build-link`)
+  .dependsOn(`buildLink`)
 
-lazy val `build-link` = (project in file("core/build-link"))
+lazy val `buildLink` = (project in file("core/build-link"))
   .settings(javaProjectSettings)
   .settings(
     name := "jvm-live-reload-build-link",
     description := "Contains classes which shared between build system and application runtime"
   )
 
-lazy val `hook-scala` = (projectMatrix in file("core/hook-scala"))
+lazy val `hookScala` = (projectMatrix in file("core/hook-scala"))
   .settings(
     name := "jvm-live-reload-hook-scala",
     description := "Predefined set of hooks for popular Scala webframeworks",
@@ -131,4 +131,4 @@ lazy val `hook-scala` = (projectMatrix in file("core/hook-scala"))
       })
   )
   .jvmPlatform(scalaVersions = supportedScalaVersions)
-  .dependsOn(`build-link`)
+  .dependsOn(`buildLink`)
