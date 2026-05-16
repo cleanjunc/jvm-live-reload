@@ -5,7 +5,7 @@ import greeter._
 object App {
   def main(args: Array[String]): Unit = {
     implicit val ec: ExecutionContext = ExecutionContext.global
-
+    
     val server = ServerBuilder
       .forPort(me.seroperson.BuildInfo.port)
       .addService(
@@ -13,22 +13,17 @@ object App {
       )
       .build()
       .start()
-
+    
     println(s"Server started on port ${me.seroperson.BuildInfo.port}")
-
-    try {
-      server.awaitTermination()
-    } catch {
-      case _: InterruptedException =>
-        server.shutdownNow()
-    }
+    
+    server.awaitTermination()
   }
 }
 
 class GreeterImpl extends GreeterGrpc.Greeter {
   override def sayHello(request: HelloRequest): scala.concurrent.Future[HelloReply] = {
     scala.concurrent.Future.successful(
-      HelloReply(message = s"Hello World Reloaded!")
+      HelloReply(message = s"Greetings, ${request.name}!")
     )
   }
 }

@@ -48,7 +48,6 @@ addCommandAlias(
   "quickLocalPublish",
   "quickPublish;publishM2;publishLocal;catVersion"
 )
-addCommandAlias("quickScripted", "quickPublish;scripted")
 
 // if version was pinned already, read from file, otherwise generate new
 version := {
@@ -77,8 +76,6 @@ lazy val `sbtLiveReload` = (projectMatrix in file("sbt"))
   .settings(
     name := "sbt-live-reload",
     description := "Provides an universal Live Reload experience for web applications built with sbt",
-    scriptedBufferLog := false,
-    scriptedBatchExecution := false,
     (pluginCrossBuild / sbtVersion) := {
       scalaBinaryVersion.value match {
         case "2.12" => "1.12.0"
@@ -87,7 +84,6 @@ lazy val `sbtLiveReload` = (projectMatrix in file("sbt"))
     },
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "me.seroperson.reload.live.sbt",
-    scriptedLaunchOpts += version.apply { v => s"-Dproject.version=$v" }.value,
     libraryDependencies ++= {
       scalaBinaryVersion.value match {
         case "3" => Seq(

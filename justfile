@@ -24,7 +24,7 @@ is-release: calculate-version
   [[ `cat version.txt` != *"SNAPSHOT"* ]]
 
 test-sbt: publish-local-if-unpublished-sbt
-  {{ sbt }} quickScripted
+  {{ sbt }} test
 
 [private]
 publish-local-if-unpublished-sbt:

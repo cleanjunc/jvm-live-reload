@@ -10,8 +10,5 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
 libraryDependencies ++= Seq(
   "com.thesamet.scalapb" %% "compilerplugin" % "0.11.17",
   "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M20",
-  "com.eed3si9n.expecty" %% "expecty" % "0.16.0",
-  "io.grpc" % "grpc-netty-shaded" % "1.72.0",
-  "io.grpc" % "grpc-stub" % "1.72.0",
-  "io.grpc" % "grpc-protobuf" % "1.72.0"
+  "com.eed3si9n.expecty" %% "expecty" % "0.16.0"
 )
