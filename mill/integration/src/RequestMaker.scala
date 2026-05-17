@@ -135,7 +135,14 @@ trait RequestMaker {
       tlsTrust: Option[File] = None
   ): Boolean = pollUntil(s"GRPC streaming $serviceName/$methodName") { () =>
     val collected =
-      serverStreamingCall(host, port, serviceName, methodName, request, tlsTrust)
+      serverStreamingCall(
+        host,
+        port,
+        serviceName,
+        methodName,
+        request,
+        tlsTrust
+      )
     val matched = collected.size == expected.size &&
       collected.zip(expected).forall { case (a, b) => a.sameElements(b) }
     if (!matched)
@@ -160,7 +167,9 @@ trait RequestMaker {
       grpcCall(host, port, serviceName, methodName, request, Some(trust))
     val matched = response.sameElements(expectedResponse)
     if (!matched)
-      println(s"TLS GRPC mismatch, got ${response.map("%02x".format(_)).mkString}")
+      println(
+        s"TLS GRPC mismatch, got ${response.map("%02x".format(_)).mkString}"
+      )
     matched
   }
 

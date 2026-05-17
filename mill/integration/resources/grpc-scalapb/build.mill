@@ -1,8 +1,8 @@
 package build
 
-import mill.contrib.scalapblib.*
 import me.seroperson.reload.live.mill.*
 import mill.*
+import mill.contrib.scalapblib.*
 import mill.scalalib.*
 
 object app extends LiveReloadModule, ScalaModule, ScalaPBModule {

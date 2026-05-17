@@ -22,6 +22,32 @@ scalacOptions ++= Seq(
 // There are some "unused" settings from sbt-git, disabling this check to not pollute logs
 Global / lintUnusedKeysOnLoad := false
 
+// Installs a git pre-push hook that runs `just code-format-check-all`
+// Skips on Windows and when not in a git checkout (e.g. CI shallow clones still
+// have .git, but published-sources extracts don't)
+Global / onLoad ~= { old =>
+  if (!scala.util.Properties.isWin) {
+    import java.nio.file._
+    val hooksDir = Paths.get(".git", "hooks")
+    if (Files.isDirectory(hooksDir.getParent)) {
+      val prePush = hooksDir.resolve("pre-push")
+      val script =
+        """#!/bin/sh
+          |set -eu
+          |if ! command -v just >/dev/null 2>&1; then
+          |  echo "pre-push: 'just' is not installed, skipping format check" >&2
+          |  exit 0
+          |fi
+          |just code-format-check-all
+          |""".stripMargin
+      Files.createDirectories(hooksDir)
+      Files.write(prePush, script.getBytes("UTF-8"))
+      prePush.toFile.setExecutable(true)
+    }
+  }
+  old
+}
+
 // Publishing settings
 organization := "me.seroperson"
 licenses := List("MIT" -> url("https://opensource.org/licenses/MIT"))
