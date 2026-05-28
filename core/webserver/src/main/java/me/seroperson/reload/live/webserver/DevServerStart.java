@@ -61,7 +61,7 @@ public class DevServerStart extends BaseDevServerStart<Undertow> {
               proxyClientProvider,
               /* maxRequestTime */ -1,
               ResponseCodeHandler.HANDLE_404,
-              /* rewriteHostHeader */ false,
+              /* rewriteHostHeader */ true,
               /* reuseXForwarded */ false,
               2);
       // @formatter:on
