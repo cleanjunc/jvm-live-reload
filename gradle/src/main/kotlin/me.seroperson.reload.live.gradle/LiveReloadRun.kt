@@ -10,7 +10,6 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
-import org.gradle.deployment.internal.DeploymentHandle
 import org.gradle.deployment.internal.DeploymentRegistry
 import org.gradle.deployment.internal.DeploymentRegistry.ChangeBehavior
 import org.gradle.work.DisableCachingByDefault
@@ -45,27 +44,29 @@ abstract class LiveReloadRun
         @get:Internal
         val isUpToDate: Boolean
             get() {
-                val deploymentHandle = deploymentRegistry.get(path, DeploymentHandle::class.java)
-                return deploymentHandle != null
+                val runHandle = deploymentRegistry.get(path, LiveReloadRunHandle::class.java)
+                return runHandle?.isRunning() == true
             }
+
+        private fun currentParams(): LiveReloadRunParams =
+            LiveReloadRunParams(
+                this.runtimeClasspath.files,
+                this.classes.files,
+                this.settings.get(),
+                this.mainClass.get(),
+                this.startupHooks.get(),
+                this.shutdownHooks.get(),
+                this.propagateEnv.get(),
+                this.serverType.get(),
+            )
 
         @TaskAction
         fun run(changes: InputChanges) {
             val id = path
+            val params = currentParams()
             val runHandle: LiveReloadRunHandle? =
                 deploymentRegistry.get(id, LiveReloadRunHandle::class.java)
             if (runHandle == null) {
-                val params =
-                    LiveReloadRunParams(
-                        this.runtimeClasspath.files,
-                        this.classes.files,
-                        this.settings.get(),
-                        this.mainClass.get(),
-                        this.startupHooks.get(),
-                        this.shutdownHooks.get(),
-                        this.propagateEnv.get(),
-                        this.serverType.get(),
-                    )
                 deploymentRegistry.start(id, ChangeBehavior.BLOCK, LiveReloadRunHandle::class.java, params)
             } else {
                 if (!changes.isIncremental) {
@@ -75,7 +76,13 @@ abstract class LiveReloadRun
                     logger.info("Reload application by incremental changes in application classpath")
                     runHandle.markChanged()
                 } else {
-                    logger.info("Incremental changes in Assets")
+                    if (!changes.isIncremental) {
+                        logger.info("Reload application by no incremental changes")
+                    } else if (changes.getFileChanges(this.classes).iterator().hasNext()) {
+                        logger.info("Reload application by incremental changes in application classpath")
+                    } else {
+                        logger.info("Incremental changes in Assets")
+                    }
                 }
             }
         }

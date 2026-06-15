@@ -17,8 +17,9 @@ import javax.inject.Inject
 open class LiveReloadRunHandle
     @Inject
     constructor(
-        private val params: LiveReloadRunParams,
+        params: LiveReloadRunParams,
     ) : DeploymentHandle {
+        private var params: LiveReloadRunParams = params
         private var deployment: Deployment? = null
         private var devServer: ReloadableServer? = null
         private val lock: ReadWriteLock = ReentrantReadWriteLock()
@@ -49,9 +50,43 @@ open class LiveReloadRunHandle
         override fun isRunning(): Boolean {
             lock.readLock().lock()
             try {
-                return devServer != null
+                return devServer?.isRunning() == true
             } finally {
                 lock.readLock().unlock()
+            }
+        }
+
+        /** Replaces run configuration from the latest [LiveReloadRun] task execution. */
+        fun updateParams(params: LiveReloadRunParams) {
+            lock.writeLock().lock()
+            try {
+                this.params = params
+            } finally {
+                lock.writeLock().unlock()
+            }
+        }
+
+        /** Starts the dev server again after [stop] when Gradle re-runs the task. */
+        fun restart() {
+            lock.writeLock().lock()
+            try {
+                val deployment =
+                    deployment
+                        ?: throw IllegalStateException(
+                            "Cannot restart live-reload: deployment handle is not available",
+                        )
+                if (devServer?.isRunning() == true) {
+                    return
+                }
+                closeDevServer()
+                try {
+                    startDevServer(deployment)
+                } catch (e: Exception) {
+                    logger.error("Failed to restart live-reload dev server", e)
+                    throw e
+                }
+            } finally {
+                lock.writeLock().unlock()
             }
         }
 
@@ -77,54 +112,67 @@ open class LiveReloadRunHandle
             lock.writeLock().lock()
             this.deployment = deployment
             try {
-                val serverClass =
-                    when (params.serverType) {
-                        ServerType.HTTP -> "me.seroperson.reload.live.webserver.DevServerStart"
-                        ServerType.GRPC -> "me.seroperson.reload.live.webserver.grpc.GrpcDevServerStart"
-                    }
-                val params =
-                    StartParams(
-                        // todo: deal with args, properties and java options
-                        DevServerSettings(listOf(), listOf(), params.settings),
-                        params.dependencyClasspath.toList(),
-                        // monitoredFiles
-                        listOf(),
-                        serverClass,
-                        params.mainClass,
-                        params.startupHooks,
-                        params.shutdownHooks,
-                        params.propagateEnv,
-                    )
-
-                val buildLogger = LiveReloadLogger()
-                val devServerRunner = DevServerRunner.getInstance()
-                devServer =
-                    devServerRunner.runBackground(
-                        params,
-                        this::reloadCompile,
-                        this::isChanged,
-                        // fileWatcherService
-                        null,
-                        buildLogger,
-                    )
-                // Visible only when running with `--info`
-                DevServerRunner.printBanner(devServer, buildLogger)
+                startDevServer(deployment)
             } finally {
                 lock.writeLock().unlock()
             }
+        }
+
+        private fun closeDevServer() {
+            val server = devServer
+            devServer = null
+            if (server != null) {
+                try {
+                    server.close()
+                } catch (e: Exception) {
+                    logger.error("Error closing live-reload dev server", e)
+                }
+            }
+        }
+
+        private fun startDevServer(deployment: Deployment) {
+            closeDevServer()
+            val serverClass =
+                when (params.serverType) {
+                    ServerType.HTTP -> "me.seroperson.reload.live.webserver.DevServerStart"
+                    ServerType.GRPC -> "me.seroperson.reload.live.webserver.grpc.GrpcDevServerStart"
+                }
+            val startParams =
+                StartParams(
+                    // todo: deal with args, properties and java options
+                    DevServerSettings(listOf(), listOf(), params.settings),
+                    params.dependencyClasspath.toList(),
+                    // monitoredFiles
+                    listOf(),
+                    serverClass,
+                    params.mainClass,
+                    params.startupHooks,
+                    params.shutdownHooks,
+                    params.propagateEnv,
+                )
+
+            val buildLogger = LiveReloadLogger()
+            val devServerRunner = DevServerRunner.getInstance()
+            devServer =
+                devServerRunner.runBackground(
+                    startParams,
+                    this::reloadCompile,
+                    this::isChanged,
+                    // fileWatcherService
+                    null,
+                    buildLogger,
+                )
+            // Visible only when running with `--info`
+            DevServerRunner.printBanner(devServer, buildLogger)
         }
 
         override fun stop() {
             lock.writeLock().lock()
             logger.info("Application is stopping ...")
             try {
-                devServer?.close()
+                closeDevServer()
                 logger.info("Application stopped.")
-            } catch (e: Exception) {
-                logger.error("Application stopped with exception", e)
             } finally {
-                devServer = null
-                deployment = null
                 lock.writeLock().unlock()
             }
         }
