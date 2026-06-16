@@ -40,6 +40,16 @@ case object CaskAppHookBundle extends HookBundle {
   )
 }
 
+case object MicronautAppHookBundle extends HookBundle {
+  def startupHooks: Seq[String] = Seq(
+    LiveKeys.HookClassnames.RestApiHealthCheckStartup
+  )
+  def shutdownHooks: Seq[String] = Seq(
+    LiveKeys.HookClassnames.MicronautAppShutdown,
+    LiveKeys.HookClassnames.RestApiHealthCheckShutdown
+  )
+}
+
 case object GrpcAppHookBundle extends HookBundle {
   def startupHooks: Seq[String] = Seq(
     LiveKeys.HookClassnames.GrpcHealthCheckStartup

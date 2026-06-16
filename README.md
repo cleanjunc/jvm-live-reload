@@ -461,6 +461,10 @@ The complete list of built-in hooks:
     <td>Calls <code>Thread.interrupt()</code> on the main thread.</td>
   </tr>
   <tr>
+    <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/core/build-link/src/main/java/me/seroperson/reload/live/hook/MicronautAppShutdownHook.java">MicronautAppShutdownHook</a></td>
+    <td>Stops a Micronaut <code>ApplicationContext</code> (the embedded Netty server) and waits for its server threads to terminate. Needed because <code>Micronaut.run(...)</code> returns immediately, leaving no main thread to interrupt.</td>
+  </tr>
+  <tr>
     <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/core/hook-scala/src/main/scala/me/seroperson/reload/live/hook/io/IoAppStartupHook.scala">IoAppStartupHook</a></td>
     <td>(<i>Scala-only</i>) Starts a <code>cats.effect.IOApp</code>. Basically, it just sets an internal property to strip unnecessary logging.</td>
   </tr>
@@ -481,9 +485,11 @@ The complete list of built-in hooks:
 The `sbt` and `mill` plugins also provide a set of predefined hooks, so-called
 hook bundles, which will be automatically used when a plugin finds the
 corresponding library in a classpath. Currently, supported sets are:
-`ZioAppHookBundle`, `IoAppHookBundle`, `CaskAppHookBundle` and
-`GrpcAppHookBundle` (picked automatically once `liveServerType` is set to
-`GrpcServerType`). All available options are defined in [HookBundle.scala][4].
+`ZioAppHookBundle`, `IoAppHookBundle`, `CaskAppHookBundle`,
+`MicronautAppHookBundle` (picked automatically once `micronaut` is found on the
+classpath) and `GrpcAppHookBundle` (picked automatically once `liveServerType`
+is set to `GrpcServerType`). All available options are defined in
+[HookBundle.scala][4].
 You can also override a set of startup/shutdown hooks using the
 `liveStartupHooks` and `liveShutdownHooks` keys. For example:
 
@@ -526,6 +532,40 @@ object app extends LiveReloadModule, ScalaModule {
       HookClassnames.RestApiHealthCheckStartup
     )
   }
+}
+```
+
+The `gradle` plugin does not auto-detect frameworks, so a Micronaut application
+needs the Micronaut shutdown hook wired explicitly. A typical
+`Micronaut.run(...)` entry point starts the embedded server on its own threads
+and returns immediately, so `MicronautAppShutdownHook` is used instead of
+`ThreadInterruptShutdownHook`:
+
+```kotlin
+liveReload {
+  settings = mapOf("live.reload.http.port" to "8081")
+  shutdownHooks = listOf(
+    "me.seroperson.reload.live.hook.MicronautAppShutdownHook",
+    "me.seroperson.reload.live.hook.RestApiHealthCheckShutdownHook",
+  )
+}
+```
+
+The same hook works for `sbt` and `mill`, where `MicronautAppHookBundle` selects
+it automatically once `micronaut` is on the classpath.
+
+Besides exposing a `/health` endpoint, a Micronaut application has to be started
+so that Micronaut scans the reloaded class loader for beans (otherwise the
+reloaded controllers are invisible and every route returns `404`). Pass the
+application's class loader explicitly instead of using the bare
+`Micronaut.run(...)`:
+
+```java
+public static void main(String[] args) {
+    Micronaut.build(args)
+        .classLoader(Application.class.getClassLoader())
+        .mainClass(Application.class)
+        .start();
 }
 ```
 
@@ -604,6 +644,12 @@ whether their own setup will work.
     <td><i>javalin</i> <b>6.7.0</b>, <i>jte</i> <b>3.2.2</b></td>
     <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/plugin/plugin/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadJavalinTest.kt">LiveReloadJavalinTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/plugin/plugin/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadJavalinJteTest.kt">LiveReloadJavalinJteTest.kt</a></td>
     <td>Everything from <a href="#changes-to-the-application-code">this section</a>.</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/micronaut-projects/micronaut-core">micronaut</a> (Java, Netty embedded server)</td>
+    <td><i>micronaut</i> <b>4.7.6</b></td>
+    <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadMicronautTest.kt">LiveReloadMicronautTest.kt</a></td>
+    <td>Expose a <code>/health</code> endpoint and start via <code>Micronaut.build(args).classLoader(Application.class.getClassLoader()).mainClass(Application.class).start()</code> so Micronaut scans the reloaded class loader for beans.</td>
   </tr>
   <tr>
     <td><a href="https://github.com/grpc/grpc-java">grpc-java</a> (Kotlin, unary + streaming + reflection + TLS)</td>
