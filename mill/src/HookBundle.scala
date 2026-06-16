@@ -29,6 +29,17 @@ case object IoAppHookBundle extends HookBundle {
   )
 }
 
+case object PekkoAppHookBundle extends HookBundle {
+  def startupHooks: Seq[String] = Seq(
+    HookClassnames.RestApiHealthCheckStartup
+  )
+  def shutdownHooks: Seq[String] = Seq(
+    HookClassnames.PekkoHttpAppShutdown,
+    HookClassnames.RuntimeShutdown,
+    HookClassnames.RestApiHealthCheckShutdown
+  )
+}
+
 case object CaskAppHookBundle extends HookBundle {
   def startupHooks: Seq[String] = Seq(
     HookClassnames.RestApiHealthCheckStartup

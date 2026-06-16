@@ -38,6 +38,16 @@ class LiveReloadSpec extends LiveReloadBase {
     }
   }
 
+  testEach("pekko-http - live reload on source change") { sbtVersion =>
+    withRunner("pekko-http", sbtVersion) { (runner, proxyPort) =>
+      runner.run("bgRun")
+      verifyHttp("greet", 200, Some("Hello World"), proxyPort)
+      runner.copyFile("changes/App.scala.1", "src/main/scala/App.scala")
+      verifyHttp("greet_reloaded", 200, Some("World Hello"), proxyPort)
+      verifyHttp("greet", 404, port = proxyPort)
+    }
+  }
+
   testEach("cask - live reload on source change") { sbtVersion =>
     withRunner("cask", sbtVersion) { (runner, proxyPort) =>
       runner.run("bgRun")

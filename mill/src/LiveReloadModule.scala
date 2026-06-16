@@ -84,6 +84,7 @@ trait LiveReloadModule extends JavaModule {
       def has(prefix: String): Boolean = jarNames.exists(_.startsWith(prefix))
       if (has("zio-http")) Some(ZioAppHookBundle)
       else if (has("http4s")) Some(IoAppHookBundle)
+      else if (has("pekko-http")) Some(PekkoAppHookBundle)
       else if (has("cask")) Some(CaskAppHookBundle)
       else if (has("zio")) Some(ZioAppHookBundle)
       else if (has("cats-effect")) Some(IoAppHookBundle)

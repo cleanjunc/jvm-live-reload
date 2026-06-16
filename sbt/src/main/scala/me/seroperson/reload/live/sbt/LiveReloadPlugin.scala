@@ -74,6 +74,8 @@ object LiveReloadPlugin extends AutoPlugin {
               ZioAppHookBundle
             case lib if SbtCompat.fileName(lib.data).startsWith("http4s") =>
               IoAppHookBundle
+            case lib if SbtCompat.fileName(lib.data).startsWith("pekko-http") =>
+              PekkoAppHookBundle
             case lib if SbtCompat.fileName(lib.data).startsWith("cask") =>
               CaskAppHookBundle
           }

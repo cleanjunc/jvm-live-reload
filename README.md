@@ -476,14 +476,19 @@ The complete list of built-in hooks:
     <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/core/hook-scala/src/main/scala/me/seroperson/reload/live/hook/zio/ZioZioAppShutdownHook.scala">ZioAppShutdownHook</a></td>
     <td>(<i>Scala-only</i>) Stops a <code>zio.ZIOApp</code>. Stops all internal executors if possible.</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/core/hook-scala/src/main/scala/me/seroperson/reload/live/hook/pekko/PekkoHttpAppShutdownHook.scala">PekkoHttpAppShutdownHook</a></td>
+    <td>(<i>Scala-only</i>) Stops an Apache Pekko HTTP application. Interrupts the application thread and waits for the <code>ActorSystem</code> dispatcher threads to exit. Requires the application's <code>main</code> to call <code>system.terminate()</code> on <code>InterruptedException</code>.</td>
+  </tr>
 </table>
 
 The `sbt` and `mill` plugins also provide a set of predefined hooks, so-called
 hook bundles, which will be automatically used when a plugin finds the
 corresponding library in a classpath. Currently, supported sets are:
-`ZioAppHookBundle`, `IoAppHookBundle`, `CaskAppHookBundle` and
-`GrpcAppHookBundle` (picked automatically once `liveServerType` is set to
-`GrpcServerType`). All available options are defined in [HookBundle.scala][4].
+`ZioAppHookBundle`, `IoAppHookBundle`, `PekkoAppHookBundle`,
+`CaskAppHookBundle` and `GrpcAppHookBundle` (picked automatically once
+`liveServerType` is set to `GrpcServerType`). All available options are defined
+in [HookBundle.scala][4].
 You can also override a set of startup/shutdown hooks using the
 `liveStartupHooks` and `liveShutdownHooks` keys. For example:
 
@@ -580,6 +585,12 @@ whether their own setup will work.
     <td><i>http4s-ember-server</i> <b>0.23.30</b>, <i>cats-effect</i> <b>3.6.1</b>, <i>pureconfig</i> <b>0.17.9</b></td>
     <td>See <code>http4s-*</code> in <a href="https://github.com/seroperson/jvm-live-reload/tree/main/sbt/src/test/resources">sbt test resources</a> folder.</td>
     <td>Only <code>/health</code> endpoint.</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/apache/pekko-http">pekko-http</a> + <a href="https://github.com/apache/pekko">pekko</a></td>
+    <td><i>pekko-http</i> <b>1.1.0</b>, <i>pekko</i> <b>1.1.3</b></td>
+    <td>See <code>pekko-http</code> in <a href="https://github.com/seroperson/jvm-live-reload/tree/main/sbt/src/test/resources">sbt test resources</a> folder.</td>
+    <td><code>/health</code> endpoint, plus <code>main</code> must catch <code>InterruptedException</code> and call <code>system.terminate()</code>.</td>
   </tr>
   <tr>
     <td><a href="https://github.com/com-lihaoyi/cask">cask</a></td>
