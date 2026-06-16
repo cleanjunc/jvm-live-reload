@@ -1,0 +1,114 @@
+package me.seroperson.reload.live.gradle
+
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.test.Test
+
+@Timeout(value = 5, unit = TimeUnit.MINUTES)
+class LiveReloadSparkTest : LiveReloadTestBase() {
+    @field:TempDir lateinit var projectDir: File
+
+    private val appCode by lazy {
+        val kotlinSources = projectDir.resolve("src/main/kotlin")
+        kotlinSources.mkdirs()
+        kotlinSources.resolve("App.kt")
+    }
+    private val buildFile by lazy { projectDir.resolve("build.gradle.kts") }
+    private val settingsFile by lazy { projectDir.resolve("settings.gradle.kts") }
+
+    @Test
+    fun `reload spark`() {
+        settingsFile.writeText(SETTINGS_CONTENT)
+        buildFile.writeText(BUILD_CONTENT)
+        appCode.writeText(APP_CODE_1)
+
+        val runner = initGradleRunner(":liveReloadRun", projectDir)
+        val isBuildRunning = AtomicBoolean(true)
+        val runThread =
+            Thread {
+                try {
+                    runner.build()
+                    isBuildRunning.set(false)
+                } catch (_: InterruptedException) {
+                    println("Interrupted")
+                } catch (ex: Exception) {
+                    println("Got exception ${ex.message}")
+                }
+            }
+        runThread.start()
+
+        val greet = runUntil(isBuildRunning, "http://localhost:9000/greet", 200, "Hello World")
+
+        appCode.writeText(APP_CODE_2)
+
+        val greetReloaded =
+            runUntil(isBuildRunning, "http://localhost:9000/greet_reloaded", 200, "World Hello")
+
+        runThread.interrupt()
+
+        assertTrue(greet && greetReloaded)
+    }
+
+    companion object {
+        const val SETTINGS_CONTENT = ""
+        const val BUILD_CONTENT =
+            """
+plugins {
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    application
+    id("me.seroperson.reload.live.gradle")
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.sparkjava:spark-core:2.9.4")
+}
+
+liveReload { settings = mapOf("live.reload.http.port" to "8081") }
+
+application { mainClass = "AppKt" }
+"""
+        const val APP_CODE_1 =
+            """
+import spark.Spark
+
+fun main() {
+    Spark.port(8081)
+    Spark.get("/greet") { _, _ -> "Hello World" }
+    Spark.get("/health") { _, _ -> "" }
+    Spark.awaitInitialization()
+    try {
+        Thread.currentThread().join()
+    } catch (ex: InterruptedException) {
+        Spark.stop()
+        Spark.awaitStop()
+    }
+}
+"""
+        const val APP_CODE_2 =
+            """
+import spark.Spark
+
+fun main() {
+    Spark.port(8081)
+    Spark.get("/greet_reloaded") { _, _ -> "World Hello" }
+    Spark.get("/health") { _, _ -> "" }
+    Spark.awaitInitialization()
+    try {
+        Thread.currentThread().join()
+    } catch (ex: InterruptedException) {
+        Spark.stop()
+        Spark.awaitStop()
+    }
+}
+"""
+    }
+}

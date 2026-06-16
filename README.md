@@ -606,6 +606,12 @@ whether their own setup will work.
     <td>Everything from <a href="#changes-to-the-application-code">this section</a>.</td>
   </tr>
   <tr>
+    <td><a href="https://github.com/perwendel/spark">spark</a> (com.sparkjava)</td>
+    <td><i>spark-core</i> <b>2.9.4</b></td>
+    <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/plugin/plugin/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadSparkTest.kt">LiveReloadSparkTest.kt</a></td>
+    <td>Call <code>Spark.stop()</code> on <code>InterruptedException</code> plus everything from <a href="#changes-to-the-application-code">this section</a>.</td>
+  </tr>
+  <tr>
     <td><a href="https://github.com/grpc/grpc-java">grpc-java</a> (Kotlin, unary + streaming + reflection + TLS)</td>
     <td><i>grpc-java</i> <b>1.72.0</b></td>
     <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcTest.kt">LiveReloadGrpcTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcStreamingTest.kt">LiveReloadGrpcStreamingTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcReflectionTest.kt">LiveReloadGrpcReflectionTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcTlsTest.kt">LiveReloadGrpcTlsTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcMultiprojectTest.kt">LiveReloadGrpcMultiprojectTest.kt</a></td>
