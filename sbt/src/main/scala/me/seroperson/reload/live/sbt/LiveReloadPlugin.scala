@@ -76,6 +76,9 @@ object LiveReloadPlugin extends AutoPlugin {
               IoAppHookBundle
             case lib if SbtCompat.fileName(lib.data).startsWith("cask") =>
               CaskAppHookBundle
+            case lib
+                if SbtCompat.fileName(lib.data).startsWith("spring-boot") =>
+              SpringBootAppHookBundle
           }
       }
     ),

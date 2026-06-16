@@ -40,6 +40,18 @@ case object CaskAppHookBundle extends HookBundle {
   )
 }
 
+case object SpringBootAppHookBundle extends HookBundle {
+  def startupHooks: Seq[String] = Seq(
+    HookClassnames.RestApiHealthCheckStartup
+  )
+  // No RuntimeShutdownHook: running Spring's JVM shutdown hook flips its `inProgress`
+  // flag for good and breaks the next SpringApplication.run().
+  def shutdownHooks: Seq[String] = Seq(
+    HookClassnames.SpringBootAppShutdown,
+    HookClassnames.RestApiHealthCheckShutdown
+  )
+}
+
 case object GrpcAppHookBundle extends HookBundle {
   def startupHooks: Seq[String] = Seq(
     HookClassnames.GrpcHealthCheckStartup

@@ -9,6 +9,7 @@ object HookClassnames {
 
   val IoAppShutdown = "me.seroperson.reload.live.hook.io.IoAppShutdownHook"
   val ZioAppShutdown = "me.seroperson.reload.live.hook.zio.ZioAppShutdownHook"
+  val SpringBootAppShutdown = "me.seroperson.reload.live.hook.spring.SpringBootAppShutdownHook"
   val RuntimeShutdown = "me.seroperson.reload.live.hook.RuntimeShutdownHook"
   val RestApiHealthCheckShutdown = "me.seroperson.reload.live.hook.RestApiHealthCheckShutdownHook"
   val GrpcHealthCheckShutdown = "me.seroperson.reload.live.webserver.grpc.hook.GrpcHealthCheckShutdownHook"

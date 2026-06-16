@@ -85,6 +85,7 @@ trait LiveReloadModule extends JavaModule {
       if (has("zio-http")) Some(ZioAppHookBundle)
       else if (has("http4s")) Some(IoAppHookBundle)
       else if (has("cask")) Some(CaskAppHookBundle)
+      else if (has("spring-boot")) Some(SpringBootAppHookBundle)
       else if (has("zio")) Some(ZioAppHookBundle)
       else if (has("cats-effect")) Some(IoAppHookBundle)
       else None

@@ -529,6 +529,47 @@ object app extends LiveReloadModule, ScalaModule {
 }
 ```
 
+### Spring Boot
+
+Spring Boot needs special handling. A typical `main()` just calls
+`SpringApplication.run(...)` and returns, while the embedded Tomcat/Netty server
+keeps running on its own non-daemon threads. The generic
+`ThreadInterruptShutdownHook` can't stop it (the main thread has already
+finished), so on reload the embedded server would leak threads and hold the
+port. Instead, a dedicated `SpringBootAppShutdownHook` closes the running
+`ApplicationContext` (which stops the embedded server and joins its threads)
+before the next generation starts.
+
+For `sbt` and `mill` this is wired automatically — the `spring-boot` dependency
+is detected and the Spring Boot hook bundle is applied. For `gradle` (which has
+no auto-detection) set the hooks explicitly:
+
+```kotlin
+liveReload {
+  // The startup hook stays at its default value
+  shutdownHooks = listOf(
+    "me.seroperson.reload.live.hook.spring.SpringBootAppShutdownHook",
+    "me.seroperson.reload.live.hook.RestApiHealthCheckShutdownHook",
+  )
+}
+```
+
+Notes:
+
+- Do **not** add `RuntimeShutdownHook` to a Spring Boot setup. It runs Spring's
+  static `SpringApplicationShutdownHook` (a JVM shutdown hook), which permanently
+  marks shutdown as in-progress and breaks the next generation's
+  `SpringApplication.run(...)`. `SpringBootAppShutdownHook` closes the context
+  gracefully on its own.
+
+- Expose a `/health` endpoint (any `2xx`), same as every other framework.
+- **Remove `spring-boot-devtools`.** DevTools ships its own restart classloader,
+  which conflicts with the reloading performed by this plugin. It must be absent
+  (or disabled) when using `jvm-live-reload`.
+- On reload the `ApplicationContext` is closed and the embedded Tomcat/Netty
+  threads are joined within `live.reload.thread-interrupt-timeout` (default
+  `15000` ms). If shutdown is slow, increase that timeout.
+
 ### Propagate environment
 
 This plugin provides a feature to propagate custom environment variables to a
@@ -610,6 +651,12 @@ whether their own setup will work.
     <td><i>grpc-java</i> <b>1.72.0</b></td>
     <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcTest.kt">LiveReloadGrpcTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcStreamingTest.kt">LiveReloadGrpcStreamingTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcReflectionTest.kt">LiveReloadGrpcReflectionTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcTlsTest.kt">LiveReloadGrpcTlsTest.kt</a>, <a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadGrpcMultiprojectTest.kt">LiveReloadGrpcMultiprojectTest.kt</a></td>
     <td>Expose <code>grpc.health.v1.Health</code> plus everything from <a href="#changes-to-the-application-code">this section</a>.</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/spring-projects/spring-boot">spring-boot</a> (Spring MVC / WebFlux)</td>
+    <td><i>spring-boot</i> <b>3.3.5</b></td>
+    <td><a href="https://github.com/seroperson/jvm-live-reload/blob/main/gradle/src/functionalTest/kotlin/me.seroperson.reload.live.gradle/LiveReloadSpringBootTest.kt">LiveReloadSpringBootTest.kt</a></td>
+    <td>Expose <code>/health</code>, remove <code>spring-boot-devtools</code>, and (for <code>gradle</code>) set the Spring Boot <code>shutdownHooks</code> — see <a href="#spring-boot">below</a>. <code>sbt</code> / <code>mill</code> auto-detect <code>spring-boot</code>.</td>
   </tr>
   <tr>
     <td><a href="https://github.com/scalapb/ScalaPB">scalapb</a> + <a href="https://github.com/grpc/grpc-java">grpc-netty</a></td>
